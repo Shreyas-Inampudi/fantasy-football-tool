@@ -23,6 +23,7 @@ A comprehensive web application that provides in-depth statistical analysis and 
 
 ## Installation
 
+```bash
 # Clone the repository
 git clone https://github.com/yourusername/fantasy-football-tool.git
 
@@ -34,6 +35,7 @@ npm install
 
 # Start the development server
 npm start
+```
 Then, open your browser and navigate to http://localhost:3000.
 
 Usage Guide
@@ -70,19 +72,19 @@ Fork the repository.
 
 Create your feature branch:
 
-bash
-Copy
+```bash
 git checkout -b feature/amazing-feature
+```
+
 Commit your changes:
-
-bash
-Copy
+```bash
 git commit -m 'Add some amazing feature'
-Push to your branch:
+```
 
-bash
-Copy
+Push to your branch:
+```bash
 git push origin feature/amazing-feature
+```
 Open a Pull Request.
 
 License
