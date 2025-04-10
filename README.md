@@ -25,7 +25,7 @@ A comprehensive web application that provides in-depth statistical analysis and 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/fantasy-football-tool.git
+git clone https://github.com/Shreyas-Inampudi/fantasy-football-tool.git
 
 # Navigate to the directory
 cd fantasy-football-tool
