@@ -1,84 +1,96 @@
-Fantasy Football Stats Tool
-📊 Overview
-Fantasy Football Stats Tool is a comprehensive web application that provides in-depth statistical analysis and visualization of NFL player performance data. Track league leaders across multiple statistical categories from 2010-2024 with an intuitive, responsive interface to help you dominate your fantasy football league.
+# Fantasy Football Stats Tool
 
-✨ Features
-Comprehensive Season Data: Access player statistics across multiple NFL seasons (2010-2024)
-Dynamic Filtering: Filter player statistics by team and season year
-Visual Category Segmentation: Color-coded statistical categories for quick identification
-Dual API Integration: Combines data from both ESPN and Sleeper APIs for comprehensive coverage
-Responsive Design: Optimized for both desktop and mobile viewing
+A comprehensive web application that provides in-depth statistical analysis and visualization of NFL player performance data. Track league leaders across multiple statistical categories from 2010–2024 with an intuitive, responsive interface designed to help you dominate your fantasy football league.
 
-🔜 Coming Soon
-Player Comparison Tool: Side-by-side comparison of player stats to make optimal lineup decisions
-Draft Insights: AI-powered insights and recommendations for draft strategies based on historical performance
-Fantasy Point Projections: Weekly and seasonal projections to help you win your matchups
-Sleeper League Integration: Connect directly to your Sleeper leagues for personalized insights
+## Key Features
 
-🖥️ Screenshots
-!Dashboard View
-!Stats Filtering
+- **Comprehensive Season Data:** Access player statistics from NFL seasons 2010–2024.
+- **Dynamic Filtering:** Filter player stats by team and season.
+- **Visual Category Segmentation:** Color-coded categories for quick identification.
+- **Dual API Integration:** Combines data from the ESPN API and the Sleeper API for comprehensive coverage.
+- **Responsive Design:** Optimized for both desktop and mobile viewing.
 
-🚀 Technologies Used
-React: Frontend library for building the user interface
-Material UI: Component library for consistent, modern design
-ESPN API: Data source for comprehensive NFL statistics
-Sleeper API: Integration with popular fantasy football platform for league-specific data
-JavaScript ES6+: Modern JavaScript features for efficient code
+## 🔜 Coming Soon
 
-🏁 Getting Started
-Prerequisites
-Node.js (v14.0 or higher recommended)
-npm or yarn package manager
-Installation
-Clone this repository
-Apply to App.js
-Run
-   git clone https://github.com/yourusername/fantasy-football-tool.git
-   cd fantasy-football-tool
-Install dependencies
-Apply to App.js
-Run
-   npm install
-Start the development server
-Apply to App.js
-Run
-   npm start
-Open your browser and navigate to http://localhost:3000
+- **Player Comparison Tool:** Side-by-side comparisons of player stats for optimal lineup decisions.
+- **Draft Insights:** AI-powered recommendations for draft strategies based on historical performance.
+- **Fantasy Point Projections:** Weekly and seasonal projections to help you win matchups.
+- **Sleeper League Integration:** Connect directly to your Sleeper leagues for personalized insights.
 
-📋 Usage
-Select a Season: Use the Year dropdown to choose an NFL season from 2010-2024.
+## Screenshots
+
+*(No images available at this time)*
+
+## Installation
+
+# Clone the repository
+git clone https://github.com/yourusername/fantasy-football-tool.git
+
+# Navigate to the directory
+cd fantasy-football-tool
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm start
+Then, open your browser and navigate to http://localhost:3000.
+
+Usage Guide
+Select a Season: Use the dropdown to choose an NFL season (2010–2024).
+
 Filter by Team: Optionally filter statistics by a specific NFL team.
-Browse Categories: Expand/collapse statistical categories like Passing, Rushing, Receiving, etc.
-View Leaders: See league leaders ranked by their performance in each category.
 
-📊 Data Sources
-The application leverages multiple data sources for comprehensive fantasy insights:
-ESPN Sports API: Real-time player statistics and historical performance data
-Sleeper API: League-specific information, player values, and fantasy-focused metrics
-Combined data provides both official stats and fantasy-relevant insights
+Browse Categories: Expand or collapse statistical categories (e.g., Passing, Rushing, Receiving).
 
-🛠️ Future Enhancements
-Advanced statistical filtering options
-User favorite teams/players tracking
-Weekly matchup analyzer
-Trade value calculator
-Injury impact assessment
-Multi-platform fantasy league integration
+View Leaders: See league leaders ranked by performance in each statistical category.
 
-🤝 Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
-Fork the repository
-Create your feature branch (git checkout -b feature/amazing-feature)
-Commit your changes (git commit -m 'Add some amazing feature')
-Push to the branch (git push origin feature/amazing-feature)
-Open a Pull Request
+Data Sources
+ESPN Sports API: Provides official, real-time, and historical NFL statistics.
 
-📝 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+Sleeper API: Offers league-specific data and fantasy-focused metrics for enhanced insights.
 
-👏 Acknowledgements
-Data provided by ESPN's sports API and Sleeper API
-Team color schemes from official NFL branding
-All NFL team names and information belong to their respective owners
+Future Enhancements
+Advanced statistical filtering options.
+
+User tracking for favorite teams and players.
+
+Weekly matchup analyzer.
+
+Trade value calculator.
+
+Injury impact assessment.
+
+Multi-platform fantasy league integration.
+
+Contributing
+Contributions are welcome! To contribute:
+
+Fork the repository.
+
+Create your feature branch:
+
+bash
+Copy
+git checkout -b feature/amazing-feature
+Commit your changes:
+
+bash
+Copy
+git commit -m 'Add some amazing feature'
+Push to your branch:
+
+bash
+Copy
+git push origin feature/amazing-feature
+Open a Pull Request.
+
+License
+This project is licensed under the MIT License – see the LICENSE file for details.
+
+Acknowledgements
+Data provided by the ESPN Sports API and the Sleeper API.
+
+NFL team names, logos, and statistics are the property of their respective owners.
+
 Made with ❤️ by Shreyas Inampudi
