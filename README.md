@@ -79,9 +79,6 @@ git push origin feature/amazing-feature
 ```
 Open a Pull Request.
 
-## License
-- This project is licensed under the MIT License – see the LICENSE file for details.
-
 ## Acknowledgements
 - Data provided by the ESPN Sports API and the Sleeper API.
 - NFL team names, logos, and statistics are the property of their respective owners.
