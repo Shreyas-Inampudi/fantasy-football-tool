@@ -20,10 +20,12 @@ import {
 import {
   Search as SearchIcon,
   BarChart as StatsIcon,
-  SportsFootball as FootballIcon
+  SportsFootball as FootballIcon,
+  CompareArrows as CompareIcon
 } from '@mui/icons-material';
 import PlayerSearch from './components/PlayerSearch';
 import PlayerStats from './components/PlayerStats';
+import PlayerComparison from './components/PlayerComparison';
 import './App.css';
 
 // Create a modern theme with a sleek color scheme
@@ -104,6 +106,7 @@ function AppContent() {
   const menuItems = [
     { text: 'Player Search', icon: <SearchIcon />, path: '/player-search' },
     { text: 'Player Stats', icon: <StatsIcon />, path: '/player-stats' },
+    { text: 'Player Comparison', icon: <CompareIcon />, path: '/compare' },
   ];
 
   return (
@@ -165,6 +168,7 @@ function AppContent() {
             <Routes>
               <Route path="/player-search" element={<PlayerSearch />} />
               <Route path="/player-stats" element={<PlayerStats />} />
+              <Route path="/compare" element={<PlayerComparison />} />
               <Route path="/" element={<PlayerSearch />} />
             </Routes>
           </Paper>
