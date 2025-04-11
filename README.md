@@ -19,7 +19,11 @@ A comprehensive web application that provides in-depth statistical analysis and 
 
 ## Screenshots
 
-*(No images available at this time)*
+<p align="center">
+  <img src="images/player-stats.png">
+  <img src="images/player-search.png">
+  <img src ="images/player-comparison.png">
+</p>
 
 ## Installation
 
