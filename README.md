@@ -38,61 +38,51 @@ npm start
 ```
 Then, open your browser and navigate to http://localhost:3000.
 
-Usage Guide
-Select a Season: Use the dropdown to choose an NFL season (2010–2024).
+## Usage Guide
+- **Select a Season:** Use the dropdown to choose an NFL season (2010–2024).
+- **Filter by Team:** Optionally filter statistics by a specific NFL team.
+- **Browse Categories:** Expand or collapse statistical categories (e.g., Passing, Rushing, Receiving).
+- **View Leaders:** See league leaders ranked by performance in each statistical category.
 
-Filter by Team: Optionally filter statistics by a specific NFL team.
+## Data Sources
+- **ESPN Sports API:** Provides official, real-time, and historical NFL statistics.
+- **Sleeper API:** Offers league-specific data and fantasy-focused metrics for enhanced insights.
 
-Browse Categories: Expand or collapse statistical categories (e.g., Passing, Rushing, Receiving).
+## Future Enhancements
+- Advanced statistical filtering options.
+- User tracking for favorite teams and players.
+- Weekly matchup analyzer.
+- Trade value calculator.
+- Injury impact assessment.
+- Multi-platform fantasy league integration.
 
-View Leaders: See league leaders ranked by performance in each statistical category.
+## Contributing
+- Contributions are welcome! 
 
-Data Sources
-ESPN Sports API: Provides official, real-time, and historical NFL statistics.
+**To contribute:**
+- Fork the repository.
 
-Sleeper API: Offers league-specific data and fantasy-focused metrics for enhanced insights.
-
-Future Enhancements
-Advanced statistical filtering options.
-
-User tracking for favorite teams and players.
-
-Weekly matchup analyzer.
-
-Trade value calculator.
-
-Injury impact assessment.
-
-Multi-platform fantasy league integration.
-
-Contributing
-Contributions are welcome! To contribute:
-
-Fork the repository.
-
-Create your feature branch:
+**Create your feature branch:**
 
 ```bash
 git checkout -b feature/amazing-feature
 ```
 
-Commit your changes:
+**Commit your changes:**
 ```bash
 git commit -m 'Add some amazing feature'
 ```
 
-Push to your branch:
+**Push to your branch:**
 ```bash
 git push origin feature/amazing-feature
 ```
 Open a Pull Request.
 
-License
-This project is licensed under the MIT License – see the LICENSE file for details.
+## License
+- This project is licensed under the MIT License – see the LICENSE file for details.
 
-Acknowledgements
-Data provided by the ESPN Sports API and the Sleeper API.
-
-NFL team names, logos, and statistics are the property of their respective owners.
-
-Made with ❤️ by Shreyas Inampudi
+## Acknowledgements
+- Data provided by the ESPN Sports API and the Sleeper API.
+- NFL team names, logos, and statistics are the property of their respective owners.
+- Made by Shreyas Inampudi
