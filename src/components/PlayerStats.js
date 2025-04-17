@@ -15,9 +15,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  TextField,
   Alert,
   Card,
   Chip,
@@ -25,15 +23,33 @@ import {
   Fade,
   Grid,
   Skeleton,
-  alpha
+  alpha,
+  Button,
+  CircularProgress,
+  Tabs,
+  Tab,
+  IconButton,
+  InputAdornment
 } from '@mui/material';
 import { 
   ExpandMore as ExpandMoreIcon,
   Timeline as TimelineIcon,
   FilterAlt as FilterIcon,
   BarChart as StatsIcon,
-  CalendarMonth as YearIcon
+  CalendarMonth as YearIcon,
+  Save as SaveIcon,
+  Search as SearchIcon,
+  ArrowUpward as ArrowUpwardIcon,
+  ArrowDownward as ArrowDownwardIcon
 } from '@mui/icons-material';
+import {
+  addPlayerStats,
+  getPlayerStats,
+  updatePlayerStats,
+  importPlayerStats,
+  searchPlayers,
+  getPlayersByTeam
+} from '../services/database';
 
 // Team color mapping for visual enhancement
 const teamColors = {
@@ -118,23 +134,29 @@ const getCategoryUnit = (categoryName) => {
   
   // Fallback to predefined categories if not in camelCase or specific format
   const unitMap = {
-    "passing": "Passing Yards",
-    "rushing": "Rushing Yards", 
-    "receiving": "Receiving Yards",
-    "scoring": "Points",
-    "defense": "Tackles",
-    "kicking": "Field Goals",
-    "returns": "Return Yards",
-    "completions": "Completions",
-    "attempts": "Attempts",
-    "touchdowns": "Touchdowns",
-    "interceptions": "Interceptions",
-    "sacks": "Sacks",
-    "fumbles": "Fumbles",
-    "punts": "Punts",
-    "punting": "Punting Yards",
-    "yards": "Yards",
-    "average": "Average"
+    "passing": "PASSING YARDS",
+    "rushing": "RUSHING YARDS", 
+    "receiving": "RECEIVING YARDS",
+    "scoring": "POINTS",
+    "defense": "TACKLES",
+    "kicking": "FIELD GOALS",
+    "returns": "RETURN YARDS",
+    "completions": "COMPLETIONS",
+    "attempts": "ATTEMPTS",
+    "touchdowns": "TOUCHDOWNS",
+    "interceptions": "INTERCEPTIONS",
+    "sacks": "SACKS",
+    "fumbles": "FUMBLES",
+    "punts": "PUNTS",
+    "punting": "PUNTING YARDS",
+    "yards": "YARDS",
+    "average": "AVERAGE",
+    "passing yards": "PASSING YARDS",
+    "rushing yards": "RUSHING YARDS",
+    "receiving yards": "RECEIVING YARDS",
+    "field goals": "FIELD GOALS",
+    "return yards": "RETURN YARDS",
+    "punting yards": "PUNTING YARDS"
   };
   
   // Check if category name includes any of the keys
@@ -144,7 +166,11 @@ const getCategoryUnit = (categoryName) => {
     }
   }
   
-  return categoryName; // Just return the category name if no match
+  // If no match found, split the category name into words and capitalize each
+  return categoryName
+    .split(/(?=[A-Z])|_|\s+/)
+    .map(word => word.toUpperCase())
+    .join(' ');
 };
 
 function PlayerStats() {
@@ -157,6 +183,13 @@ function PlayerStats() {
   const [athleteDetails, setAthleteDetails] = useState({});
   const [teamDetails, setTeamDetails] = useState({});
   const [filterTeam, setFilterTeam] = useState("");
+  const [filterPosition, setFilterPosition] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [localStats, setLocalStats] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [sortDirection, setSortDirection] = useState('desc');
 
   // API URL
   const url = `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/${year}/types/${SEASONTYPE}/leaders?lang=en&region=us`;
@@ -168,6 +201,8 @@ function PlayerStats() {
     setAthleteDetails({});
     setTeamDetails({});
     setFilterTeam("");
+    setFilterPosition("");
+    setSearchQuery("");
   };
 
   // Available years for selection
@@ -285,221 +320,301 @@ function PlayerStats() {
     return Array.from(teamSet).sort();
   }, [leagueLeadersData, teamDetails]);
 
+  // Handle tab change
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue);
+  };
+
+  // Handle sort direction change
+  const handleSortDirectionChange = () => {
+    setSortDirection(prev => prev === 'desc' ? 'asc' : 'desc');
+  };
+
+  // Filter and sort players based on current category
+  const getFilteredAndSortedPlayers = () => {
+    if (!leagueLeadersData || !leagueLeadersData.categories) return [];
+    
+    const category = leagueLeadersData.categories[selectedTab];
+    if (!category || !category.leaders) return [];
+
+    let filteredLeaders = category.leaders;
+
+    // Apply team filter
+    if (filterTeam) {
+      filteredLeaders = filteredLeaders.filter(leader => {
+        const teamRef = leader.team?.$ref || "";
+        if (!teamRef) return false;
+        const teamName = teamDetails[teamRef]?.name || "";
+        return teamName === filterTeam;
+      });
+    }
+
+    // Apply position filter
+    if (filterPosition) {
+      filteredLeaders = filteredLeaders.filter(leader => {
+        const athleteRef = leader.athlete?.$ref || "";
+        const athlete = athleteDetails[athleteRef];
+        return athlete?.position === filterPosition;
+      });
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      filteredLeaders = filteredLeaders.filter(leader => {
+        const athleteRef = leader.athlete?.$ref || "";
+        const athleteName = athleteDetails[athleteRef]?.name || "";
+        return athleteName.toLowerCase().includes(searchQuery.toLowerCase());
+      });
+    }
+
+    // Sort leaders
+    filteredLeaders.sort((a, b) => {
+      const valueA = parseFloat(a.value) || 0;
+      const valueB = parseFloat(b.value) || 0;
+      return sortDirection === 'desc' ? valueB - valueA : valueA - valueB;
+    });
+
+    return filteredLeaders;
+  };
+
+  // Save stats to database
+  const saveStatsToDatabase = async (stats) => {
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const statsData = {
+        year,
+        stats,
+        source: 'ESPN',
+        lastUpdated: new Date().toISOString()
+      };
+      await addPlayerStats(statsData);
+      setLocalStats(stats);
+    } catch (error) {
+      console.error('Error saving stats:', error);
+      setSaveError('Failed to save stats to database');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Load stats from database
+  const loadStatsFromDatabase = async () => {
+    try {
+      const stats = await getPlayerStats(null, year);
+      if (stats) {
+        setLocalStats(stats.stats);
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
+
+  // Import all stats to database
+  const importAllStats = async () => {
+    if (!leagueLeadersData || !leagueLeadersData.categories) return;
+    
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const statsArray = leagueLeadersData.categories.map(category => ({
+        year,
+        category: category.name,
+        leaders: category.leaders.map(leader => ({
+          athleteId: leader.athlete?.id,
+          athleteName: athleteDetails[leader.athlete?.$ref]?.name || 'Unknown',
+          teamId: leader.team?.id,
+          teamName: teamDetails[leader.team?.$ref]?.name || 'Unknown',
+          value: leader.value,
+          displayValue: leader.displayValue
+        }))
+      }));
+      
+      await importPlayerStats(statsArray);
+      setLocalStats(statsArray);
+    } catch (error) {
+      console.error('Error importing stats:', error);
+      setSaveError('Failed to import stats to database');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Render filter controls
   const renderFilters = () => (
-    <Card 
-      elevation={0} 
-      sx={{ 
-        p: 3, 
-        mb: 4,
-        backgroundColor: 'rgba(0, 0, 0, 0.2)',
-        backgroundImage: 'linear-gradient(rgba(99, 102, 241, 0.05), rgba(236, 72, 153, 0.05))',
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'rgba(255, 255, 255, 0.1)'
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
-        <FilterIcon color="primary" fontSize="small" />
-        <Typography variant="subtitle1" fontWeight="600">Filter Options</Typography>
-      </Box>
-      
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <FormControl variant="outlined" fullWidth>
-            <InputLabel id="year-select-label">Season Year</InputLabel>
+    <Box sx={{ mb: 3 }}>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} sm={3}>
+          <FormControl fullWidth>
+            <InputLabel>Year</InputLabel>
             <Select
-              labelId="year-select-label"
               value={year}
+              label="Year"
               onChange={handleYearChange}
-              label="Season Year"
-              startAdornment={<YearIcon sx={{ mr: 1, color: 'primary.main' }} />}
             >
-              {availableYears.map(y => (
-                <MenuItem key={y} value={y}>
-                  {y} Season
-                </MenuItem>
+              {availableYears.map((y) => (
+                <MenuItem key={y} value={y}>{y}</MenuItem>
               ))}
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <FormControl variant="outlined" fullWidth>
-            <InputLabel id="team-filter-label">Team</InputLabel>
+        <Grid item xs={12} sm={3}>
+          <FormControl fullWidth>
+            <InputLabel>Team</InputLabel>
             <Select
-              labelId="team-filter-label"
               value={filterTeam}
-              onChange={(e) => setFilterTeam(e.target.value)}
               label="Team"
+              onChange={(e) => setFilterTeam(e.target.value)}
             >
-              <MenuItem value="">
-                <em>All Teams</em>
-              </MenuItem>
-              {distinctTeams.map(teamName => (
-                <MenuItem 
-                  key={teamName} 
-                  value={teamName}
-                  sx={{ 
-                    borderLeft: `4px solid ${getTeamColor(teamName)}`,
-                    pl: 2
-                  }}
-                >
-                  {teamName}
-                </MenuItem>
+              <MenuItem value="">All Teams</MenuItem>
+              {distinctTeams.map((team) => (
+                <MenuItem key={team} value={team}>{team}</MenuItem>
               ))}
             </Select>
           </FormControl>
+        </Grid>
+        <Grid item xs={12} sm={3}>
+          <FormControl fullWidth>
+            <InputLabel>Position</InputLabel>
+            <Select
+              value={filterPosition}
+              label="Position"
+              onChange={(e) => setFilterPosition(e.target.value)}
+            >
+              <MenuItem value="">All Positions</MenuItem>
+              <MenuItem value="QB">QB</MenuItem>
+              <MenuItem value="RB">RB</MenuItem>
+              <MenuItem value="WR">WR</MenuItem>
+              <MenuItem value="TE">TE</MenuItem>
+              <MenuItem value="K">K</MenuItem>
+              <MenuItem value="DST">DST</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} sm={3}>
+          <TextField
+            fullWidth
+            label="Search Players"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
         </Grid>
       </Grid>
-    </Card>
+      {saveError && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {saveError}
+        </Alert>
+      )}
+    </Box>
   );
 
-  // Render league leaders data
-  const renderLeagueLeaders = () => {
+  // Render stats table
+  const renderStatsTable = () => {
     if (!leagueLeadersData || !leagueLeadersData.categories) {
       return <Typography>No league leader data available.</Typography>;
     }
 
+    const category = leagueLeadersData.categories[selectedTab];
+    if (!category) return null;
+
+    const filteredLeaders = getFilteredAndSortedPlayers();
+    const categoryColor = getCategoryColor(category.name);
+
     return (
-      <Box sx={{ mt: 2 }}>
-        {leagueLeadersData.categories.map((category, index) => {
-          // Skip categories with no leaders
-          if (!category.leaders || category.leaders.length === 0) {
-            return null;
-          }
-
-          const categoryColor = getCategoryColor(category.name);
-          
-          // Filter leaders by selected team if a filter is applied
-          const filteredLeaders = filterTeam
-            ? category.leaders.filter(leader => {
+      <Box sx={{ 
+        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        overflow: 'hidden',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
+      }}>
+        <TableContainer component={Paper} elevation={0} sx={{ 
+          backgroundColor: 'transparent',
+          border: 'none'
+        }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ 
+                backgroundColor: alpha(categoryColor, 0.2),
+                borderBottom: `2px solid ${alpha(categoryColor, 0.3)}`
+              }}>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>RANK</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>PLAYER</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>TEAM</TableCell>
+                <TableCell 
+                  sx={{ 
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    color: 'white',
+                    '&:hover': { backgroundColor: alpha(categoryColor, 0.3) }
+                  }}
+                  onClick={handleSortDirectionChange}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {getCategoryUnit(category.name)}
+                    {sortDirection === 'desc' ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
+                  </Box>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredLeaders.map((leader, leaderIndex) => {
+                const athleteRef = leader.athlete?.$ref || "";
                 const teamRef = leader.team?.$ref || "";
-                if (!teamRef) return false;
-                const teamName = teamDetails[teamRef]
+                
+                const athleteName = athleteRef && athleteDetails[athleteRef]
+                  ? athleteDetails[athleteRef].name
+                  : "Loading...";
+                
+                const teamName = teamRef && teamDetails[teamRef]
                   ? teamDetails[teamRef].name
-                  : "";
-                return teamName === filterTeam;
-              })
-            : category.leaders;
-
-          // If no leaders match the team filter, skip this category
-          if (filteredLeaders.length === 0) {
-            return null;
-          }
-
-          return (
-            <Accordion 
-              key={index} 
-              defaultExpanded={index === 0}
-              sx={{ 
-                my: 2, 
-                backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                backgroundImage: `linear-gradient(${alpha(categoryColor, 0.05)}, transparent)`,
-                borderRadius: '8px !important',
-                border: '1px solid',
-                borderColor: 'rgba(255, 255, 255, 0.1)',
-                '&:before': {
-                  display: 'none',
-                },
-                boxShadow: 'none',
-                '&.Mui-expanded': {
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
-                  transition: 'all 0.2s ease-in-out',
-                }
-              }}
-            >
-              <AccordionSummary 
-                expandIcon={<ExpandMoreIcon />}
-                sx={{ 
-                  borderLeft: `4px solid ${categoryColor}`,
-                  borderTopLeftRadius: 8,
-                  borderTopRightRadius: 8,
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <StatsIcon sx={{ color: categoryColor }} />
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    {category.name}
-                  </Typography>
-                  <Chip 
-                    label={`${filteredLeaders.length} Leaders`} 
-                    size="small"
+                  : "Loading...";
+                  
+                const teamColor = getTeamColor(teamName);
+                  
+                return (
+                  <TableRow 
+                    key={leaderIndex}
                     sx={{ 
-                      backgroundColor: alpha(categoryColor, 0.2),
-                      color: 'white',
-                      ml: 1,
-                      fontWeight: 'bold'
+                      backgroundColor: leaderIndex % 2 === 0 ? 'transparent' : alpha(categoryColor, 0.05),
+                      '&:hover': {
+                        backgroundColor: alpha(categoryColor, 0.1),
+                        transition: 'background-color 0.2s',
+                      },
+                      transition: 'background-color 0.2s',
+                      borderBottom: leaderIndex < filteredLeaders.length - 1 ? `1px solid ${alpha(categoryColor, 0.1)}` : 'none'
                     }}
-                  />
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails>
-                <TableContainer component={Paper} elevation={0} sx={{ 
-                  backgroundColor: 'transparent',
-                  border: 'none'
-                }}>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow sx={{ backgroundColor: alpha(categoryColor, 0.2) }}>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Rank</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Player</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Team</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{getCategoryUnit(category.name)}</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filteredLeaders.map((leader, leaderIndex) => {
-                        const athleteRef = leader.athlete?.$ref || "";
-                        const teamRef = leader.team?.$ref || "";
-                        
-                        const athleteName = athleteRef && athleteDetails[athleteRef]
-                          ? athleteDetails[athleteRef].name
-                          : "Loading...";
-                        
-                        const teamName = teamRef && teamDetails[teamRef]
-                          ? teamDetails[teamRef].name
-                          : "Loading...";
-                          
-                        const teamColor = getTeamColor(teamName);
-                          
-                        return (
-                          <TableRow 
-                            key={leaderIndex}
-                            sx={{ 
-                              backgroundColor: leaderIndex % 2 === 0 ? 'transparent' : alpha(categoryColor, 0.05),
-                              '&:hover': {
-                                backgroundColor: alpha(categoryColor, 0.1),
-                                transition: 'background-color 0.2s',
-                              },
-                              transition: 'background-color 0.2s',
-                            }}
-                          >
-                            <TableCell>{leaderIndex + 1}</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>{athleteName}</TableCell>
-                            <TableCell>
-                              <Chip 
-                                label={teamName} 
-                                size="small"
-                                sx={{ 
-                                  backgroundColor: alpha(teamColor, 0.2),
-                                  color: 'white',
-                                  borderColor: alpha(teamColor, 0.5),
-                                  fontWeight: 'bold',
-                                  border: '1px solid'
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>{leader.displayValue}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </AccordionDetails>
-            </Accordion>
-          );
-        })}
+                  >
+                    <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>{leaderIndex + 1}</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>{athleteName}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={teamName} 
+                        size="small"
+                        sx={{ 
+                          backgroundColor: alpha(teamColor, 0.2),
+                          color: 'white',
+                          borderColor: alpha(teamColor, 0.5),
+                          fontWeight: 'bold',
+                          border: '1px solid'
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>{leader.displayValue}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Box>
     );
   };
@@ -533,12 +648,18 @@ function PlayerStats() {
             }}
           >
             <TimelineIcon fontSize="large" sx={{ color: '#6366f1' }} />
-            NFL Stats Explorer
+            NFL STATS EXPLORER
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
             View league leader statistics across NFL seasons from 2010-2024
           </Typography>
-          <Divider sx={{ mb: 4 }} />
+          <Divider sx={{ 
+            mb: 4,
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            borderWidth: '1px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            height: '1px'
+          }} />
         </Box>
 
         {renderFilters()}
@@ -546,19 +667,55 @@ function PlayerStats() {
         {loading ? (
           renderLoadingState()
         ) : error ? (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 2, 
-              backgroundColor: 'rgba(211, 47, 47, 0.1)', 
-              border: '1px solid rgba(211, 47, 47, 0.2)',
-              color: '#f87171'
-            }}
-          >
+          <Alert severity="error" sx={{ mb: 2 }}>
             Error loading stats: {error.message}
           </Alert>
         ) : (
-          renderLeagueLeaders()
+          <Box>
+            <Tabs
+              value={selectedTab}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                mb: 2,
+                '& .MuiTab-root': {
+                  minWidth: 120,
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  color: 'text.secondary',
+                  '&.Mui-selected': {
+                    color: 'primary.main',
+                  },
+                },
+                '& .MuiTabs-indicator': {
+                  height: 3,
+                  borderRadius: '3px 3px 0 0',
+                },
+              }}
+            >
+              {leagueLeadersData?.categories.map((category, index) => {
+                // Format the category name to add spaces before capital letters
+                const formattedLabel = category.name
+                  .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+                  .trim() // Remove leading space
+                  .toUpperCase(); // Convert to uppercase
+
+                return (
+                  <Tab
+                    key={index}
+                    label={formattedLabel}
+                    sx={{
+                      borderLeft: `4px solid ${getCategoryColor(category.name)}`,
+                      pl: 2,
+                    }}
+                  />
+                );
+              })}
+            </Tabs>
+            {renderStatsTable()}
+          </Box>
         )}
       </div>
     </Fade>

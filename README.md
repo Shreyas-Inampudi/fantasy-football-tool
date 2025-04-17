@@ -4,7 +4,7 @@ A comprehensive web application that provides in-depth statistical analysis and 
 
 ## Key Features
 
-- **Comprehensive Season Data:** Access player statistics from NFL seasons 2010–2025.
+- **Comprehensive Season Data:** Access player statistics from NFL seasons 2010–2024.
 - **Dynamic Filtering:** Filter player stats by team and season.
 - **Visual Category Segmentation:** Color-coded categories for quick identification.
 - **Dual API Integration:** Combines data from the ESPN API and the Sleeper API for comprehensive coverage.
