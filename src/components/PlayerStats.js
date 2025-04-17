@@ -294,7 +294,7 @@ function PlayerStats() {
           setAthleteDetails(prev => ({ ...prev, [ref]: { name: "Unknown" } }));
         });
     });
-  }, [leagueLeadersData]);
+  }, [leagueLeadersData, athleteDetails]);
 
   // Fetch team details
   useEffect(() => {
@@ -327,7 +327,7 @@ function PlayerStats() {
           setTeamDetails(prev => ({ ...prev, [ref]: { name: "Unknown" } }));
         });
     });
-  }, [leagueLeadersData]);
+  }, [leagueLeadersData, teamDetails]);
 
   // Get distinct teams for filtering
   const distinctTeams = React.useMemo(() => {

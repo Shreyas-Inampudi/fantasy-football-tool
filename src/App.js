@@ -22,9 +22,7 @@ import {
   BarChart as StatsIcon,
   SportsFootball as FootballIcon,
   CompareArrows as CompareIcon,
-  Psychology as AIIcon,
-  Timeline as TimelineIcon,
-  Strategy as StrategyIcon
+  Psychology as StrategyIcon
 } from '@mui/icons-material';
 import PlayerSearch from './components/PlayerSearch';
 import PlayerStats from './components/PlayerStats';

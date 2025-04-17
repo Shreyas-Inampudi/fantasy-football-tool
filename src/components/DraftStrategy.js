@@ -24,12 +24,10 @@ import {
   alpha
 } from '@mui/material';
 import {
-  Timeline as TimelineIcon,
-  TrendingUp as TrendingUpIcon,
+  Psychology as TimelineIcon,
   Grade as GradeIcon,
-  Warning as WarningIcon,
   CheckCircle as CheckCircleIcon,
-  SportsSoccer as FootballIcon
+  SportsFootball as FootballIcon
 } from '@mui/icons-material';
 
 function DraftStrategy() {
